@@ -1,17 +1,30 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <title>My NM2207 GitHub Portfolio</title>
-    <script src="scripts/counter.js"></script>
-    <link rel="stylesheet" href="styles/styles.css" />
-  </head>
-  <body>
-    <h1>Hello world hehehehehehhe! 🚀</h1>
-    <h2>This is a site hosted on GitHub Pages.</h2>
-    <h3>Here's a hungry mouse. Please feed him!</h3>
-    <h3 class="mouse">🐁</h3>
-    <p> Hey lowly human, feed me food now</p>
-    <h3>Food counter: <span class="counter">0</span> 🥙</h3>
-    <button>Feed!</button>
-  </body>
+<html>
+
+<head>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <div id="game-container">
+        <h2 id="title"></h2>
+        <p id="tip"></p>
+        <div id="life">
+            <div id="life-value"></div>
+        </div>
+        <div id="map">
+            <div id="player"></div>
+        </div>
+        <div id="notice"></div>
+    </div>
+
+    <script src="js/CollisionUtils.js"></script>
+    <script src="js/PlayerClass.js"></script>
+    <script src="js/BlockClass.js"></script>
+    <script src="js/MapClass.js"></script>
+
+    <!-- to initialize game settingsand start game -->
+    <script src="js/gameSettings.js"></script>
+</body>
+
 </html>

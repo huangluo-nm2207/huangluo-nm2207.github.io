@@ -1,0 +1,122 @@
+html,
+body {
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    background-color: black;
+    color: white;
+    text-align: center;
+    margin: 0;
+    width: 95%;
+    height: 95%;
+    /* vertically center */
+    margin: auto;
+}
+
+#title {
+    margin-top: 10%;
+}
+
+#game-container {
+    /* make all inner element's placing relative to the container */
+    position: relative;
+    width: 100%;
+    height: 97%;
+    border: 1px solid white;
+    margin-top: 2%;
+    overflow: hidden;
+    /* background setting for potential backgrounds */
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    /* layer => container is behind everything, number big means infront  */
+    z-index: -5;
+}
+
+#notice {
+    display: none;
+    margin: 2% auto 0 auto;
+    width: 40%;
+    font-size: 2em;
+    padding: 2% 5%;
+    background-color: rgb(43, 43, 43);
+    color: white;
+}
+
+
+/* life start */
+
+#life {
+    position: absolute;
+    top: 0;
+    margin: 2%;
+}
+
+#life>div {
+    background-size: contain;
+    background-repeat: no-repeat;
+    /* 这样它会往左靠 */
+    float: left;
+}
+
+.full-heart {
+    background-image: url("../resource/heart-full.png");
+}
+
+.half-heart {
+    background-image: url("../resource/heart-half.png");
+}
+
+.empty-heart {
+    background-image: url("../resource/heart-empty.png");
+}
+
+#life-value {
+    padding-left: 10px;
+}
+
+
+/* life end */
+
+
+/* block start */
+
+#map {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    z-index: -10;
+    /* smooth map movement */
+    transition: bottom 0.1s linear, left 0.1s ease-out;
+}
+
+#map>div {
+    position: absolute;
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+#player {
+    /* player icon */
+    background-image: url("../resource/player.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    /* smooth player movement */
+    transition: bottom 0.1s linear, left 0.1s linear;
+    /* make player always infront of other elements on the display */
+    z-index: 100;
+    border-bottom: 1px solid lightblue;
+}
+
+.TARGET {
+    /* target icon */
+    background-image: url("../resource/rainbow.png");
+}
+
+.CONCRET {
+    background-image: url("../resource/block.png");
+}
+
+/* block end */
