@@ -28,16 +28,19 @@ class Player {
         //---- initiate life indication end ----
 
         //---- relocate map start ----//
-        // 移动map让player保持在中间
         map.updateX();
         map.updateY();
         //---- relocate map end ----//
 
+        //---- unlock user properties start ----//
+        this.movable = true;
+        this.isInvincible = false;
+        this.isDead = false;
+        //---- unlock user properties end ----//
+
         //---- user jump start ----//
-        //unlock user and jump when level start
+        //let user jump when level start
         this.isInAir = false;
-        this.isCollidingLeft = false;
-        this.isCollidingRight = false;
         this.jump();
         //---- user jump end ----//
 
@@ -67,7 +70,6 @@ class Player {
     // by default this setting allows 4 grid high when jump
     // can increase jumpvelocity to jump higher
     // can decrease map gravity to fall slower
-    // 先随便放一个数值
     jumpVelocity = Math.floor(gridSize * 1.2);
     //---- initiate game related variables end ----
 
@@ -78,6 +80,7 @@ class Player {
     movingRightInAction = false;
     isCollidingLeft = false;
     isCollidingRight = false;
+
     // Interval for falling
     fallingInAction = false;
     // flag for if player is in air
@@ -88,6 +91,8 @@ class Player {
     isDead = false;
     //cannot take damage when invincible
     isInvincible = false;
+    //indicate if player's ovement is enabled
+    movable = true;
 
     //---- initate flag variables end ----
 
@@ -95,13 +100,12 @@ class Player {
     setX(newX) {
         //do not change anything if the value is the same
         //do not move if is out of boundary
-        if (newX != this.left && map.bound.left < newX && newX < map.bound.right) {
+        if (newX != this.left && map.bound.left <= newX && newX <= map.bound.right - this.width) {
             var valueChange = newX - this.left;
             var isValueIncrease = valueChange > 0;
             this.left = newX;
             this.right = newX + this.width;
             this.div.style.left = newX + "px";
-
             this.collisionAction("X", isValueIncrease);
 
             //move entire map
@@ -146,62 +150,116 @@ class Player {
 
 
     // move object left and right continuously until key up
-    moving(dir) {
-        if (dir === "RIGHT") {
-            if (!this.movingRightInAction && !this.isCollidingRight) {
-                // if moving right in action is not set
-                this.movingRightInAction = setInterval(() => {
-                    
-                    this.setX(this.left + this.velocity)
+    moving(direction) {
+        // do not move if the player is not movable
+        if (this.movable) {
+            var isToRight = direction === "RIGHT";
 
-                    if (this.isCollidingLeft) {
-                        this.isCollidingLeft = false;
-                    }
+            //when moving right
+            if (isToRight) {
+                if (!this.movingRightInAction && !this.isCollidingRight) {
+                    // if moving right in action is not set and not colliding to the right
+                    this.movingRightInAction = setInterval(() => {
 
-                }, 50);
+                        //remove collide lock on the other side
+                        if (this.isCollidingLeft) {
+                            this.isCollidingLeft = false;
+                        }
+
+                        this.moveInSteps(isToRight);
+
+                    }, 50);
+                }
+            } else {
+                // if moving left in action is not set and not colliding to the left
+                if (!this.movingLeftInAction && !this.isCollidingLeft) {
+                    this.movingLeftInAction = setInterval(() => {
+                        //remove collide lock on the other side
+                        if (this.isCollidingRight) {
+                            this.isCollidingRight = false;
+                        }
+
+                        this.moveInSteps(isToRight);
+
+                    }, 50);
+                }
             }
-        } else if(dir === "LEFT"){
-            // if moving left in action is not set
-            if (!this.movingLeftInAction && !this.isCollidingLeft) {
-                this.movingLeftInAction = setInterval(() => {
-                    this.setX(this.left - this.velocity)
-                    //remove collide lock on the other side
-                    if (this.isCollidingRight) {
-                        this.isCollidingRight = false;
-                    }
+        }
+    }
 
-                }, 50);
+    //to make movement in steps to prevent collision not detected
+    //only for left and right
+    moveInSteps(isToRight) {
+
+        //loop to move 1 step at a time until full distance
+        var stepLoopingTimes = Math.floor(this.velocity / step);
+
+        if (isToRight) {
+            var signed_step = step;
+            var remainder = this.velocity - stepLoopingTimes * step
+        } else {
+            var signed_step = -step
+            var remainder = -(this.velocity - stepLoopingTimes * step)
+        }
+
+
+        for (var i = 0; i < stepLoopingTimes; i++) {
+
+            //when moving the direction that is not locked
+            if (this.movable &&
+                ((isToRight && !this.isCollidingRight) || (!isToRight && !this.isCollidingLeft))) {
+                this.setX(this.left + signed_step);
             }
+
+        }
+
+        //when moving the direction that is not locked
+        if (this.movable &&
+            ((isToRight && !this.isCollidingRight) || (!isToRight && !this.isCollidingLeft))) {
+            this.setX(this.left + remainder);
         }
     }
 
     // trigger to reset moving intervals to stop movement
-    stopMoving(dir) {
-        //when dir remains null, stop both movement
-        // https://stackoverflow.com/questions/6604749/what-reason-is-there-to-use-null-instead-of-undefined-in-javascript#:~:text=It%27s%20a%20value%20that%20the,to%20have%20%22no%20value%22.
-        if (dir === "RIGHT" || dir === null) {
+    stopMoving(direction) {
+        var stopRight = false;
+        var stopLeft = false;
+
+        if (direction === "LEFT") {
+            stopLeft = true
+        } else if (direction === "RIGHT") {
+            stopRight = true
+        } else {
+            stopRight = true;
+            stopLeft = true;
+        }
+
+        if (stopLeft) {
             // if moving left in action is set
+            if (this.movingLeftInAction) {
+                clearInterval(this.movingLeftInAction);
+                this.movingLeftInAction = false;
+            }
+
+        }
+        if (stopRight) {
+            // if moving right in action is set
             if (this.movingRightInAction) {
                 clearInterval(this.movingRightInAction);
                 this.movingRightInAction = false;
             }
-
-        }
-        if (dir ==="LEFT" || dir === null) {
-            // if moving left in action is set
-            if (this.movingLeftInAction) {
-                // clear the ID movingLeftInAction (you running? Yes running, means I gotta clear you!)
-                clearInterval(this.movingLeftInAction);
-                // put false to clear the integer value so that the if( the var)is false
-                this.movingLeftInAction = false;
-            }
         }
     }
 
-    jump() {
+    jump(play = true) {
         //do not jump if is currently in air
-        if (!this.isInAir) {
+        if (this.movable && !this.isInAir) {
             this.isInAir = true;
+            if (play) {
+                //sound effect for jump
+                playAudio("sound-effect/jump.mp3", 0.5)
+            }
+
             //start freefall with initial velocity of jumping
             this.freeFall(this.jumpVelocity)
         }
@@ -217,7 +275,6 @@ class Player {
             // bracket function -> ignore setting problem
             //set new Y position
 
-            // 一步一步来，然后可以走一步test一次
             //loop to move 1 step at a time until full distance
             var loopingTimes = Math.abs(Math.floor(initial_velocity / step));
 
@@ -233,17 +290,17 @@ class Player {
 
             for (var i = 0; i < loopingTimes; i++) {
                 //to check if falling action has been terminated by other functions
-                if (this.fallingInAction)
+                if (this.movable && this.fallingInAction)
                     this.setY(this.bottom + signedStep);
             }
             //move the last remainder
             //when velocity is negative, the remainder will be negative as well
             //to check if falling action has been terminated by other functions
-            if (this.fallingInAction)
+            if (this.movable && this.fallingInAction)
                 this.setY(this.bottom + remainder);
 
             initial_velocity -= map.gravity;
-// 50 is every 50ms (set interval for repeat)
+
         }, 50);
 
     }
@@ -265,18 +322,26 @@ class Player {
             if (!this.updatingLife) {
                 //relocate to the start in 50ms time
                 this.updatingLife = setTimeout(() => {
-                    this.stopMoving();
+                    this.stopMoving("ALL");
                     this.setY(map.playerInitY);
                     this.setX(map.playerInitX);
+                    //unlock invincible if user is invincible
+                    //because falling is unprotectable
+                    if (this.isInvincible) {
+                        this.isInvincible = false
+                    }
                     //drop 1 life
                     this.updateLife(-1);
                     //reset updating health
                     this.updatingLife = false;
 
-                    //jump 1 time
+                    //jump 1 time at the respawn point
                     this.isInAir = false;
-                    this.jump();
-                }, 1000);
+                    //jump without audio
+                    this.jump(false);
+                    //play revive sound effect
+                    playAudio("sound-effect/revive.mp3")
+                }, 500);
 
             }
             //end this round of movement
@@ -286,53 +351,73 @@ class Player {
     }
 
     isOnConcret() {
-        //if there is no any concret block below
-        var filterFunction = (block) => {
-            return block.type == "CONCRET" && CollisionUtils.isOn(this, block);
-        }
-
         return (
-            //some returns true when any of the blocks return true in the following function
-            map.allBlocks.some(filterFunction)
+            //some returns true when any of the blocks is concret and is under the block
+            map.allBlocks.some((block) => block.type === "CONCRET" && CollisionUtils.isOn(this, block))
         )
 
     }
 
     //only input ±x , and smallest value of x is 0.5
     updateLife(valueChange = 0) {
+        //only update life when player is still
+        if (!this.isDead) {
 
-
-        //if life decrease,
-        if (valueChange < 0) {
-            if (this.isInvincible) {
-                //take 0 damage when is invincible
-                valueChange = 0
-            } else {
-                //jump user to signify damage taken
-                this.isInAir = false; //turn off jump lock to force jump, so in sky also can jump
-                this.jump();
-                // make user invincible for 1.5 second for user to move
-                this.isInvincible = true;
-                setTimeout(() => { this.isInvincible = false }, 1.5 * 1000)
+            //if life decrease,
+            if (valueChange < 0) {
+                if (this.isInvincible) {
+                    //take 0 damage when is invincible
+                    valueChange = 0
+                } else {
+                    //jump user to signify damage taken
+                    this.isInAir = false; //turn off jump lock to force jump
+                    this.jump();
+                    // make user invincible for 1.5 second for user to move
+                    this.isInvincible = true;
+                    setTimeout(() => { this.isInvincible = false }, 1.5 * 1000)
+                }
+            } else if (newLife + valueChange > 5) {
+                //if health more than 5, do not change to more than 5
+                valueChange = 5 - this.life;
             }
-        } else if (newLife + valueChange > 5) {
-            //if health more than 5, do not change to more than 5
-            valueChange = 5 - this.life;
-        }
 
-        var newLife = this.life + valueChange;
+            var newLife = this.life + valueChange;
 
-        if (newLife <= 5 && newLife > 0 && newLife != this.life) {
+            if (newLife <= 5 && newLife > 0 && newLife != this.life) {
+                //get all children of lifeDiv as a list
+                var childrenOfLifeDiv = this.lifeDiv.children;
 
-            this.life = newLife;
-            this.renderLifeHearts();
+                this.life = newLife;
 
-        } else if (newLife == 0) {
-            this.lifeDiv.firstChild.className = "empty-heart";
-            this.life = 0;
-            this.lifeValueDiv.innerText = "GPA: " + this.life.toFixed(1);
-            //die
-            this.die();
+                this.renderLifeHearts();
+
+                if (valueChange < 0) {
+                    // blink user to signify damage taken
+                    this.div.style.animationDuration = "1s";
+
+                    //start animation for All
+                    for (var i = 0; i < childrenOfLifeDiv.length; i++) {
+                        childrenOfLifeDiv[i].style.animationDuration = "1s";
+                    }
+
+                    //stop css animation for all children under health div after 1.5 second
+                    //this 1.5 second of blinking syncs with invicible timing as well
+                    setTimeout(() => {
+                        for (var i = 0; i < childrenOfLifeDiv.length; i++) {
+                            childrenOfLifeDiv[i].style.animationDuration = "0s";
+                        }
+
+                        this.div.style.animationDuration = "0s";
+                    }, 1.5 * 1000)
+                }
+
+            } else if (newLife <= 0) {
+                this.lifeDiv.firstChild.className = "empty-heart";
+                this.life = 0;
+                this.lifeValueDiv.innerText = "GPA: " + this.life.toFixed(1);
+                //die
+                this.die();
+            }
         }
     }
 
@@ -351,7 +436,6 @@ class Player {
         }
 
         //change life
-        // i 是指第几个heart, 第一个heart是0
         for (var i = 0; i < childrenOfLifeDiv.length - 1; i++) {
             //if current hear div is full
             if (this.life >= i + 1) {
@@ -376,107 +460,126 @@ class Player {
         this.lifeValueDiv.innerText = "GPA: " + this.life.toFixed(1);
     }
 
+
+    //when player dies
     die() {
         this.isDead = true;
+        //lock player motion
+        this.movable = false;
+        //play failing audio
+        map.setBGM("sound-effect/failed.mp3", 1);
+
+        //show failed text
         notice(
             "<p>" +
             ":-<" + "<br/>" +
             "You did not manage to graduate from NUS!" + "<br/><br/>" +
-            "<small>&lt;press space to restart&gt;</small>" + "</p>");
+            "<small>&lt;press space to restart&gt;</small>" + "</p>",
+            "failed.gif");
 
     }
 
     // detect collision between PLAYER and block
     // take actions when collision happens
-    collisionAction(dir, isValueIncrease) {
+    collisionAction(axies, isValueIncrease) {
+
+        var isDirectionX = axies === "X";
 
         //this colliding block will be the block if there is a block that collides
         //else this colliding block will be undefined
         var collidingBlocks = map.allBlocks.filter(
-            (block) => { return block.type !== "PLAYER" && CollisionUtils.isCollision(this, block); }
+            block => block.type !== "PLAYER" && CollisionUtils.isCollision(this, block)
         )
 
         //if colliding block exists
         if (collidingBlocks.length > 0) {
-            //filter blocks that are concret
-            var collidingConcrets = collidingBlocks.filter(
-                (block) => { return block.type === "CONCRET"; }
+
+            // ---- colliding with solid blocks start ---- //
+            //filter for collided solid blocks
+            var collidingSolids = collidingBlocks.filter(
+                block => block.isSolid
             )
 
-            //if there is any concret block
-            if (collidingConcrets.length > 0) {
-                var collidingConcret = false;
+            if (collidingSolids.length > 0) {
+                var collidingSolid = false;
 
                 //if current movement is on x-axies
-                if (dir === "X") {
+                if (isDirectionX) {
                     //if is moving right and right is not collided
                     if (isValueIncrease && !this.isCollidingRight) {
                         //find the block that intercept is at right of player
-                        collidingConcret = collidingConcrets.find(
-                            (block) => { return CollisionUtils.isIntercept(this, block, "RIGHT"); }
+                        collidingSolid = collidingSolids.find(
+                            block => CollisionUtils.isIntercept(this, block, "RIGHT")
                         );
-                        //if the colliding concret exists
-                        if (collidingConcret) {
+                        //if the concret exists
+                        if (collidingSolid) {
                             this.isCollidingRight = true;
                             //reset the location to the point of collision
                             //colliding player right so reposition to block left - player width
-                            // !! help need debug 
-                            this.setX(collidingConcret.left - this.width)
+                            this.setX(collidingSolid.left - this.width)
                         }
                     }
 
                     //if is moving left and left is not collided
                     if (!isValueIncrease && !this.isCollidingLeft) {
                         //find the block that intercept is at left of player
-                        collidingConcret = collidingConcrets.find(
-                            (block) => { return CollisionUtils.isIntercept(this, block, "LEFT"); }
+                        collidingSolid = collidingSolids.find(
+                            block => CollisionUtils.isIntercept(this, block, "LEFT")
                         );
                         //if the concret exists
-                        if (collidingConcret) {
+                        if (collidingSolid) {
                             this.isCollidingLeft = true;
                             //reset the location to the point of collision
                             //colliding player left so reposition to block right
-                            this.setX(collidingConcret.right);
+                            this.setX(collidingSolid.right);
                         }
                     }
                 }
                 //if current movement is on y-axies
-                else if(dir === "Y") {
+                else {
                     if (this.isInAir) {
                         //check if player is moving upwards
                         //moving upwards means will collide at player top
                         if (isValueIncrease) {
 
-                            var collidingConcret = collidingConcrets.find(
-                                (block) => { return CollisionUtils.isIntercept(this, block, "TOP"); }
+                            var collidingTopConcrets = collidingSolids.filter(
+                                block => CollisionUtils.isIntercept(this, block, "TOP")
                             );
 
                             //if the concret exists
-                            if (collidingConcret) {
+                            if (collidingTopConcrets.length > 0) {
                                 //player under concret
                                 this.stopFall();
-                                console.log(collidingConcret)
-                                //relocate the location to the point of collision
-                                this.setY(collidingConcret.bottom - this.height);
+                                //relocation the location to the point of collision
+                                this.setY(collidingSolids[0].bottom - this.height);
                                 this.freeFall();
                             }
 
+                            var collidingTreasures = collidingTopConcrets.filter(
+                                block => block.type === "TREASURE" && block.isActive
+                            );
+
+                            //if hit treasure
+                            if (collidingTreasures.length > 0) {
+                                for (var treasure of collidingTreasures) {
+                                    treasure.open();
+                                }
+                            }
                         }
                         //moving downwards means will collide at player bottom
                         else {
-                            collidingConcret = collidingConcrets.find(
-                                (block) => { return CollisionUtils.isIntercept(this, block, "BOTTOM"); }
+                            collidingSolid = collidingSolids.find(
+                                block => CollisionUtils.isIntercept(this, block, "BOTTOM")
                             );
                             //if the concret exists
-                            if (collidingConcret) {
+                            if (collidingSolid) {
                                 //player on top concret
                                 this.stopFall();
                                 //reset the location to the point of collision
-                                this.setY(collidingConcret.top);
+                                this.setY(collidingSolid.top);
 
                                 //reset inair flag after 0.05 second (50 millisecond)
                                 //to prevent jumping too fast and cause the div starting the next jump before reaching the floor
-                                //setTimeout is to delay 50ms
                                 setTimeout(() => {
                                     this.isInAir = false;
                                 }, 50)
@@ -486,37 +589,95 @@ class Player {
                 }
             }
 
+            // ---- colliding with concret end ---- //
 
+            // ---- colliding with target start ---- //
             //search for collided target
-            var collidingTarget = collidingBlocks.find((block) => { return block.type === "TARGET"; });
+            var collidingTarget = collidingBlocks.find(block => block.type === "TARGET");
             //if reach target
             if (collidingTarget && !map.initialiseLock) {
-                var nextLevel = map.currentLevel + 1;
-                //go to next level
-                //wins when no next level
-
 
                 //lock motion
-                this.isInAir = true;
-                this.isCollidingLeft = true;
-                this.isCollidingRight = true;
+                this.movable = false;
+                //do not take further damages in current level
+                this.isInvincible = true;
+
+                //enter next level
+                map.renderLevel(map.currentLevel + 1);
+            }
+
+            // ---- colliding with target end ---- //
+
+            // ---- colliding with health start ---- //
+            //search for for collided health block
+            var collidingHealth = collidingBlocks.find(block => block.type === "HEALTH");
+            //if reach health block
+            if (collidingHealth) {
+                collidingHealth.eaten();
+            }
+            // ---- colliding with health end ---- //
+        }
 
 
-                //if there is still next level, go next level
-                //else show notice
-                if (LEVELS.length > nextLevel) {
+        //this on block will be the block if there is directly under the player
+        //else this on block will be undefined
+        var onBlocks = map.allBlocks.filter(
+            block => block.type !== "PLAYER" && CollisionUtils.isOn(this, block, 1)
+        )
 
-                    map.renderLevel(nextLevel);
-                    this.stopMoving();
+        //if there is any block directly under
+        if (onBlocks.length > 0) {
 
-                } else {
-                    notice(
-                        "<p>" +
-                        ":->" + "<br/>" +
-                        "You graduated from NUS!" +
-                        "</p>");
+            // ---- on monster start ---- //
+            // do not kill monster if player is invincible
+            // this is to prevent when user jump automatically when damage is taken
+            if (!this.isInvincible) {
+                //filter for monster
+                var killingMonsters = onBlocks.filter(
+                    //look for block type monster and the moster is not dead
+                    block => block.type === "MONSTER" && !block.isDead
+                )
+
+                if (killingMonsters.length > 0) {
+                    killingMonsters.forEach(killingMonster => {
+                        killingMonster.updateLife(-this.damage);
+                    });
+                    //force jump
+                    this.isInAir = false;
+                    this.jump();
                 }
             }
+            // ---- on monster end ---- //
+
+            // ---- on jumping block start ---- //
+            //check if any block is jump block
+            if (onBlocks.some(block => block.type === "JUMP")) {
+                //trigger jumping that is 1.5 of the usual jump velocity
+
+                //delay jump if is in air, or the player will not reach the ground before the next jump
+                if (this.isInAir) {
+                    setTimeout(() => {
+                        var old = this.jumpVelocity
+                        this.jumpVelocity *= 1.5;
+                        this.jump();
+                        this.jumpVelocity = old;
+                    }, 50)
+                } else {
+                    var old = this.jumpVelocity
+                    this.jumpVelocity *= 1.5;
+                    this.jump();
+                    this.jumpVelocity = old;
+                }
+
+
+            }
+            // ---- on jumping block end ---- //
+
         }
+
+
+
     }
+
+
 }

@@ -6,12 +6,13 @@ class CollisionUtils {
     // check the interception of sides
     // repeatedly used in multiple functions
     // offset is given when the intercept is desired to calculate with offsets
+    // offset is only used for bottom, this is to check if there is block that is directly under but not intercepting with the subject
     // static means can just take and use! 直接拿来用耶
-    static isIntercept(subject, object, side, blockOffset = 0) {
+    static isIntercept(subject, object, side, bottomOffset = 0) {
         switch (side) {
 
             case ("LEFT"):
-                var blockRight = object.right + blockOffset;
+                var blockRight = object.right;
                 var interceptionLeft = (subject.right > blockRight) && (blockRight > subject.left);
                 //
                 //      ---------
@@ -24,7 +25,7 @@ class CollisionUtils {
 
 
             case ("RIGHT"):
-                var blockLeft = object.left + blockOffset;
+                var blockLeft = object.left;
                 var interceptionRight = (subject.left < blockLeft) && (blockLeft < subject.right);
                 //
                 //      ---------
@@ -32,25 +33,25 @@ class CollisionUtils {
                 //     |    XXXXXXXXX   
                 //     |    X   ||
                 //      ---------
-                //等于号== 是intercept的边边
+                //
                 return interceptionRight;
 
-            //---- interception X start ----//
+                //---- interception X start ----//
             case ("X"):
 
                 //returns interception on X
                 // interception x and y is inclusive of aligned edges
-                var blockRight = object.right + blockOffset;
+                var blockRight = object.right;
                 var interceptionLeft = (subject.right > blockRight) && (blockRight > subject.left);
-                var blockLeft = object.left + blockOffset;
+                var blockLeft = object.left;
                 var interceptionRight = (subject.left < blockLeft) && (blockLeft < subject.right);
                 var isEdgeAligned = (subject.left == blockLeft) || (subject.right == blockRight);
                 return interceptionLeft || interceptionRight || isEdgeAligned;
-            //---- interception x end ----//
+                //---- interception x end ----//
 
 
             case ("TOP"):
-                var blockBottom = object.bottom + blockOffset;
+                var blockBottom = object.bottom;
                 var interceptionTop = (subject.top > blockBottom) && (blockBottom > subject.bottom);
 
                 //          x
@@ -63,7 +64,7 @@ class CollisionUtils {
                 return interceptionTop;
 
             case ("BOTTOM"):
-                var blockTop = object.top + blockOffset
+                var blockTop = object.top + bottomOffset
                 var interceptionBottom = (subject.bottom < blockTop) && (blockTop < subject.top);
 
                 //          
@@ -75,18 +76,18 @@ class CollisionUtils {
                 //          x
                 return interceptionBottom;
 
-            //---- interception y start ----//
+                //---- interception y start ----//
             case ("Y"):
                 //implementation logic same as interception X
-                var blockBottom = object.bottom + blockOffset;
+                var blockBottom = object.bottom;
                 var interceptionTop = (subject.top > blockBottom) && (blockBottom > subject.bottom);
-                var blockTop = object.top + blockOffset
+                var blockTop = object.top;
                 var interceptionBottom = (subject.bottom < blockTop) && (blockTop < subject.top);
 
                 //returns interception on y
                 var isEdgeAligned = (subject.top == blockTop) || (subject.bottom == blockBottom);
                 return interceptionBottom || interceptionTop || isEdgeAligned;
-            //---- intercrption y end ----//
+                //---- intercrption y end ----//
         }
     }
 
@@ -98,8 +99,7 @@ class CollisionUtils {
 
     //check if subject is on this block
     static isOn(subject, object, offset = step) {
-        //compare if the subject's lower point (1/4 gridsize in Y) is within the coordinates of the block
-        // 1 step is 1/4 grid size (放在game setting)
+        //compare if the subject's lower point (1/4 step in Y) is within the coordinates of the block
         return this.isIntercept(subject, object, "X") && this.isIntercept(subject, object, "BOTTOM", offset);
     }
 }

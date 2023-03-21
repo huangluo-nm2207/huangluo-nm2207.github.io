@@ -1,3 +1,4 @@
+
 html,
 body {
     width: 100%;
@@ -6,7 +7,6 @@ body {
 
 body {
     background-color: black;
-    color: white;
     text-align: center;
     margin: 0;
     width: 95%;
@@ -31,17 +31,43 @@ body {
     background-position: center;
     background-size: cover;
     background-repeat: no-repeat;
-    /* layer => container is behind everything, number big means infront  */
     z-index: -5;
 }
 
 #notice {
     display: none;
-    margin: 2% auto 0 auto;
-    width: 40%;
+    /* fix center start */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /* fix center end */
     font-size: 2em;
     padding: 2% 5%;
     background-color: rgb(43, 43, 43);
+    color: white;
+    z-index: 100;
+}
+
+#notice>img {
+    /* max height is half of screen height */
+    max-height: 50vh;
+}
+
+#curtain {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    opacity: 0;
+    background-color: darkslategrey;
+    transition: opacity 1s linear;
+}
+
+#curtain-headline {
+    line-height: 90vh;
+    text-align: center;
     color: white;
 }
 
@@ -57,8 +83,8 @@ body {
 #life>div {
     background-size: contain;
     background-repeat: no-repeat;
-    /* 这样它会往左靠 */
     float: left;
+    transform: translate3d(0, 0, 0);
 }
 
 .full-heart {
@@ -67,14 +93,29 @@ body {
 
 .half-heart {
     background-image: url("../resource/heart-half.png");
+    animation-name: shake;
+    animation-timing-function: cubic-bezier(.36, .07, .19, .97);
+    animation-iteration-count: infinite;
+    animation-direction: both;
+    animation-play-state: paused;
 }
 
 .empty-heart {
     background-image: url("../resource/heart-empty.png");
+    animation-name: shake;
+    animation-timing-function: cubic-bezier(.36, .07, .19, .97);
+    animation-iteration-count: infinite;
+    animation-direction: both;
+    animation-play-state: running;
 }
 
 #life-value {
     padding-left: 10px;
+    opacity: 1;
+    animation-name: blink;
+    animation-duration: 0;
+    animation-iteration-count: infinite;
+    animation-play-state: running;
 }
 
 
@@ -90,6 +131,10 @@ body {
     z-index: -10;
     /* smooth map movement */
     transition: bottom 0.1s linear, left 0.1s ease-out;
+    /*background setting*/
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
 }
 
 #map>div {
@@ -104,10 +149,16 @@ body {
     background-size: contain;
     background-repeat: no-repeat;
     /* smooth player movement */
-    transition: bottom 0.1s linear, left 0.1s linear;
+    transition: bottom 0.1s linear, left 0.1s ease-out;
     /* make player always infront of other elements on the display */
     z-index: 100;
     border-bottom: 1px solid lightblue;
+    /* blinks when health drop */
+    opacity: 1;
+    animation-name: blink;
+    animation-duration: 0;
+    animation-iteration-count: infinite;
+    animation-play-state: running;
 }
 
 .TARGET {
@@ -119,4 +170,112 @@ body {
     background-image: url("../resource/block.png");
 }
 
+.MONSTER {
+    /* smooth map movement */
+    transition: bottom 0.1s linear, left 0.1s ease-out;
+    /* make monster between other elements  and player on the display */
+    z-index: 50;
+    /* blinks when health drop */
+    opacity: 1;
+    animation-name: blink;
+    animation-duration: 0;
+    animation-iteration-count: infinite;
+    animation-play-state: running;
+}
+
+.REGULAR-MONSTER {
+    background-image: url("../resource/regular-monster.png");
+}
+
+.RAPID-MONSTER {
+    background-image: url("../resource/rapid-monster.png");
+}
+
+.RANGE-MONSTER {
+    background-image: url("../resource/range-monster.png");
+}
+
+.CHICKEN-MONSTER {
+    background-image: url("../resource/chicken-monster.png");
+}
+
+.BULLET {
+    /* smooth BULLET movement */
+    transition: bottom 0.1s linear, left 0.1s ease-out;
+}
+
+.EGG-BULLET {
+    background-image: url("../resource/egg-bullet.png");
+}
+
+.NOTE-BULLET-0 {
+    background-image: url("../resource/note-bullet-0.png");
+}
+
+.NOTE-BULLET-1 {
+    background-image: url("../resource/note-bullet-1.png");
+}
+
+.NOTE-BULLET-2 {
+    background-image: url("../resource/note-bullet-2.png");
+}
+
+.TREASURE-ACTIVE {
+    background-image: url("../resource/treasure-active.png");
+}
+
+.TREASURE-INACTIVE {
+    background-image: url("../resource/treasure-inactive.png");
+}
+
+.HEALTH {
+    background-image: url("../resource/health.png");
+}
+
+.JUMP {
+    background-image: url("../resource/up-arrow-box.png");
+}
+
+
 /* block end */
+
+
+/* animations start */
+
+@keyframes shake {
+    10%,
+    90% {
+        transform: translate3d(-1px, 0, 0);
+    }
+    20%,
+    80% {
+        transform: translate3d(2px, 0, 0);
+    }
+    30%,
+    50%,
+    70% {
+        transform: translate3d(-4px, 0, 0);
+    }
+    40%,
+    60% {
+        transform: translate3d(4px, 0, 0);
+    }
+}
+
+@keyframes blink {
+    24%,
+    49%,
+    74%,
+    99% {
+        opacity: 0
+    }
+    30%,
+    50%,
+    75%,
+    100% {
+        opacity: 1
+    }
+}
+
+
+/* animations end */
