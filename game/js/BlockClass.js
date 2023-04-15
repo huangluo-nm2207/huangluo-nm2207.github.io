@@ -1,6 +1,6 @@
 //Block class
 class Block {
-    constructor(gridX, gridY, type = "CONCRET") {
+    constructor(gridX, gridY, type = "CONCRET", isSolid = true, className = type) {
         this.gridX = gridX;
         this.gridY = gridY;
         //all positions are referenced from left or bottom
@@ -12,9 +12,14 @@ class Block {
         this.height = gridSize;
         this.type = type;
 
+        //shows if player can go through this block
+        this.isSolid = isSolid
+
+        //defines the css class of this block
+        this.className = className
 
         //---- rendering the block ---
-        if (this.type != "MONSTER") {
+        if (this.type !== "MONSTER") {
             this.render();
         }
     }
@@ -23,7 +28,7 @@ class Block {
         //create the div in html
         var newBlock = document.createElement('div');
         //add type as class
-        newBlock.classList.add(this.type);
+        newBlock.className = this.className;
         newBlock.style.left = this.left + "px";
         newBlock.style.bottom = this.bottom + "px";
         newBlock.style.width = this.width + "px";
